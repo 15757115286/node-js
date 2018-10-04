@@ -5,6 +5,9 @@ const {
   myGet,
   myRequest
 } = require("../config/index.js");
+const {
+  formatDate
+} = require("../utils/index.js");
 
 // 爬取网易云音乐的起始url
 const startUrl = "https://music.163.com/discover/artist/cat?id=1001";
@@ -80,7 +83,7 @@ function collectSongs(singerInfo){
       name = singerInfo.name;
   return myRequest(baseUrl,path,(resolve,reject,data)=>{
     let result = fetchSongsInfo(data);
-    if(result.length == 0) return void reject(new Error(`获取歌手${name}歌曲信息失败`));
+    if(result.length == 0) return void reject(new Error(`获取歌手【 ${name} 】歌曲信息失败或该歌手无歌曲`));
     resolve(result);
   })
 }
@@ -94,13 +97,38 @@ function saveToLocal(singerInfo,songs){
     data.push(`曲名：${song.songName} 链接：https://${baseUrl + song.href}\n`);
   }
   fs.writeFile(`${repositoryPath}/${name}.txt`,data.join('\n'),err=>{
-    if(err) console.error(err);
-    console.log(`歌手${name}的歌曲列表获取失败！`)
+    if(err){
+      saveErrorLogs('saveToLocal',err)
+    }else{
+      saveLogs(`${formatDate(Date.now())}  歌手【 ${name} 】推荐歌曲信息成功获取\n`)
+    }
+    
+  })
+}
+
+const logsPath = path.resolve(__dirname,'../logs');
+function saveErrorLogs(functionName,error){
+  if(functionName == null || error == null) return;
+  let now = Date.now();
+  let date = formatDate(now,'yyyy-MM-dd');
+  let dateWithSeconds = formatDate(now);
+  fs.appendFile(`${logsPath}/${date}.error.log`,`${dateWithSeconds} 异常函数：${functionName || '匿名函数'}  ${error.message}\n`,err => {
+    console.error(err);
+  })
+}
+
+function saveLogs(info){
+  if(!info) return;
+  info = info.toString();
+  let date = formatDate(Date.now(),'yyyy-MM-dd');
+  fs.appendFile(`${logsPath}/${date}.log`,info,err => {
+    saveErrorLogs('saveLogs',err);
   })
 }
 
 // 可以有parallels个请求一起触发
 async function start(parallels = 1) {
+  saveLogs(`-----------------${formatDate(Date.now())}  爬虫任务开始进行-----------------\n\n`)
   let letters = await fetchNameLetter();
   for (let i = 0, len = letters.length; i < len; i++) {
     try {
@@ -111,12 +139,12 @@ async function start(parallels = 1) {
         saveToLocal(singer,songs)
       }
     } catch (e) {
-      console.log(e);
+      saveErrorLogs('start',e)
     }
   }
 }
 
 start()
   .catch(error => {
-    console.log(error);
+    saveErrorLogs('main',error);
   });
