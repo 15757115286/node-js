@@ -1,8 +1,12 @@
 const https = require("https");
 const fs = require("fs");
-const { myGet, myRequest } = require("../config/index.js");
+const path = require("path");
+const {
+  myGet,
+  myRequest
+} = require("../config/index.js");
 
-// 爬取网易云音乐的其实url
+// 爬取网易云音乐的起始url
 const startUrl = "https://music.163.com/discover/artist/cat?id=1001";
 const baseUrl = "music.163.com";
 
@@ -49,30 +53,70 @@ function collectSingers(data) {
     while ((singer = singersHrefRe.exec(lis[1]))) {
       singersUrl.push({
         name: singer[2],
-        href: singer[1]
+        href: singer[1].replace(/\s/g,'')
       });
     }
   }
   return singersUrl;
 }
 
-async function test() {
+function fetchSongsInfo(data){
+  /* let songRe = /<a href="(\/song\?id=\d+)">[\s\S]*?<b title="([^"]*)">[^<]*<\/b>[^<]*<\/a>/g; */
+  // 经过测试发现使用爬虫爬到的html内容与实际游览器中的有区别
+  let songRe = /<li><a href="([^"]+)">([^<]+)<\/a><\/li>/g
+  let songInfo = null;
+  let result = [];
+  while(songInfo = songRe.exec(data)){
+    result.push({
+      songName:songInfo[2],
+      href:songInfo[1].replace(/\s/g,'')
+    })
+  }
+  return result;
+}
+
+function collectSongs(singerInfo){
+  let path = singerInfo.href,
+      name = singerInfo.name;
+  return myRequest(baseUrl,path,(resolve,reject,data)=>{
+    let result = fetchSongsInfo(data);
+    if(result.length == 0) return void reject(new Error(`获取歌手${name}歌曲信息失败`));
+    resolve(result);
+  })
+}
+
+const repositoryPath = path.resolve(__dirname,'../repository');
+function saveToLocal(singerInfo,songs){
+  let name = singerInfo.name;
+  let song = null;
+  let data = [];
+  while(song = songs.shift()){
+    data.push(`曲名：${song.songName} 链接：https://${baseUrl + song.href}\n`);
+  }
+  fs.writeFile(`${repositoryPath}/${name}.txt`,data.join('\n'),err=>{
+    if(err) console.error(err);
+    console.log(`歌手${name}的歌曲列表获取失败！`)
+  })
+}
+
+// 可以有parallels个请求一起触发
+async function start(parallels = 1) {
   let letters = await fetchNameLetter();
   for (let i = 0, len = letters.length; i < len; i++) {
     try {
-      let result = await fetchSingersByLetter(letters[i]);
-      return result;
-    } catch (e) {}
+      let singers = await fetchSingersByLetter(letters[i]);
+      for(let j = 0,len2 = singers.length;j<len2;j++){
+        let singer = singers[j];
+        let songs = await collectSongs(singers[j]);
+        saveToLocal(singer,songs)
+      }
+    } catch (e) {
+      console.log(e);
+    }
   }
 }
 
-test()
+start()
   .catch(error => {
     console.log(error);
-  })
-  .then(result => {
-    let info = result.filter(info => {
-      return info.name == "许嵩";
-    })[0];
-    console.log(info);
   });
