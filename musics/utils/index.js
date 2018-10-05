@@ -1,3 +1,4 @@
+// 格式化日期选项
 function formatDate(date,format = 'yyyy-MM-dd hh:mm:ss'){
     try{
         date = new Date(date)
@@ -16,4 +17,17 @@ function formatDate(date,format = 'yyyy-MM-dd hh:mm:ss'){
         return times[match];
     })
 }
+
+// 将一个数组分成每个有n个数的二维数组
+function average(array,num = 1){
+    if(!Array.isArray(array) || typeof num !== 'number') return array;
+    num = Math.floor(num);
+    if(num <= 0 || array.length === 0 ) return array;
+    let result = [],copyOfArray = Array.from(array);
+    while(copyOfArray.length){
+        result.push(copyOfArray.splice(0,num));
+    }
+    return result;
+}
+exports.average = average;
 exports.formatDate = formatDate;
