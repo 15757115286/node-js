@@ -4,6 +4,12 @@ const headers = {
     "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3554.0 Safari/537.36"
 };
 
+// 爬取网易云音乐的起始url
+const startUrl = "https://music.163.com/discover/artist/cat?id=1001";
+const baseUrl = "music.163.com";
+exports.startUrl = startUrl;
+exports.baseUrl = baseUrl;
+
 // 这里在请求头里面必须要添加user-Agent来模仿游览器，否则无法获取歌手信息
 function myRequest(hostname, path, callback) {
   return new Promise((resolve, reject) => {

@@ -1,12 +1,8 @@
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
-const { myGet, myRequest } = require("../config/index.js");
+const { myGet, myRequest, startUrl, baseUrl } = require("../config/index.js");
 const { formatDate, average } = require("../utils/index.js");
-
-// 爬取网易云音乐的起始url
-const startUrl = "https://music.163.com/discover/artist/cat?id=1001";
-const baseUrl = "music.163.com";
 
 function fetchNameLetter() {
   return myGet(startUrl, (resolve, reject, data) => {
@@ -171,7 +167,8 @@ function mkdirIfnot(path, needSaveLog = true) {
   }
 }
 
-// 可以有parallels个请求一起触发
+// 可以有parallels个请求一起并行请求。这里由于时间关系，只是把获取歌手的请求可以并行（结果处理还是同步），而歌手歌曲信息
+// 还是使用同步的方式去保存的（同步发起请求并且处理结果，直到处理完毕或者产生异常）
 async function start(parallels = 1) {
   // 因为打印日志是每个步骤都有的，首先需要同步检查是否存在对应的logs目录，必须放在第一位
   mkdirIfnot(logsPath);
