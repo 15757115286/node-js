@@ -1,43 +1,50 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-let imagePath = path.resolve(__dirname,"imgs");
+const url = require("url");
+const util = require("util");
+const formidable = require('formidable');
+const {
+  getData
+} = require("./utils/request.js")
+const {
+  getFile,
+  processFormData
+} = require("./utils/read.js")
+let imagePath = path.resolve(__dirname, "imgs");
 
 const hostname = "127.0.0.1";
 const port = 3000;
 
 const server = http.createServer();
-server.on("request", (req, res) => {
+const pagePath = path.resolve(__dirname, 'pages');
+server.on("request", async (req, res) => {
   res.statusCode = 200;
-  let readStream = fs.createReadStream(imagePath + '/wl.jpg');
-  let writeStream = fs.createWriteStream(imagePath +'/copyOfwl.png');
-  let resu = readStream.pipe(writeStream);
-  readStream.pipe(res);
-  res.on("finish",()=>{
-      console.log('请求结束！')
-  })
-  readStream.on('error',err=>{
-      console.log(err);
-      res.end('文件不存在')
-  })
- /*  let data = Buffer.alloc(0);
-  req.on('data',d=>{
-    data = Buffer.concat([data,d],data.length + d.length);
-  })
-  req.on('end',()=>{
-      let dataStr = data.toString() || "{}";
-      let obj = JSON.parse(dataStr);
-      obj['age'] = 18;
-      let readStream = fs.createReadStream(imagePath + '/wl.jpg');
-      let imgData = Buffer.alloc(0);
-      readStream.on('data',d=>{
-          imgData = Buffer.concat([imgData,d],imgData.length + d.length);
-      })
-      readStream.on('end',()=>{
-        res.end(imgData)
-      })
-  }) */
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  // 游览器跨域请求头有限制，需在后台添加自定义Header，多个Header用逗号隔开
+  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,token");
+  res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
+  let urlObj = url.parse(req.url, true);
+  if (urlObj.pathname === '/index') {
+    return res.end(await getFile(pagePath + '/index.html'))
+  } else if (urlObj.pathname === '/upload') {
+    if (req.method.toLowerCase() === 'options') return res.end();
+    var form = new formidable.IncomingForm();
+    form.encoding = 'utf-8';
+    form.uploadDir = imagePath;
+    form.keepExtensions = true;
+    form.parse(req, function (err, fields, files) {
+      res.writeHead(200, {
+        'content-type': 'text/plain'
+      });
+    });
+  } else {
+    res.end('{"success":0}')
+  }
 });
+server.on("close", () => {
+  console.log('server is closed')
+})
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);

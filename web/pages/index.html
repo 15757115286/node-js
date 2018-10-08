@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <label>文件上传</label>
+        <input id="file" type="file" multiple accept="image/*">
+        <button id="upload">上传</button>
+    </div>
+    <script>
+        var upload = document.querySelector('#upload');
+        var file = document.querySelector("#file");
+        upload.addEventListener('click',function(e){
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST','http://127.0.0.1:3000/upload');
+            xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
+            xhr.onreadystatechange = function(){
+                if(xhr.status == 200 && xhr.readyState == XMLHttpRequest.DONE){
+                    console.log('上传完成！');
+                    console.log(xhr.responseText);
+                }
+            }
+            xhr.onerror = function(e){
+                console.log(e);
+            }
+            var form = new FormData();
+            if(file.files){
+                Array.from(file.files).forEach((file,index)=>{
+                    form.append('file'+index,file);
+                })
+            }
+            xhr.send(form)
+        });
+        file.addEventListener('change',function(e){
+            console.log(e);
+        })
+    </script>
+</body>
+</html>
