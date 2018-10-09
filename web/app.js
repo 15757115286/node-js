@@ -19,24 +19,36 @@ server.on("request", async (req, res) => {
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,token");
   res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   let urlObj = url.parse(req.url, true);
+  if (req.method.toLowerCase() === "options") return res.end();
   if (urlObj.pathname === "/index") {
     return res.end(await getFile(pagePath + "/index.html"));
   } else if (urlObj.pathname === "/upload") {
-    if (req.method.toLowerCase() === "options") return res.end();
     let result = null;
-    try{
+    try {
       result = await upload(req, {
-        autoSave:true,
+        autoSave: true,
         imagePath,
-        useRandomFileName:true
+        useRandomFileName: true
       });
-    }catch(e){
+    } catch (e) {
       return res.end(`{"success":1,"msg":${e.message}}`);
     }
-    res.end('{"success":0}')
+    res.end('{"success":0}');
+  } else if (urlObj.pathname === "/images/wl") {
+    let rstream = fs.createReadStream(imagePath + "/wl.jpg");
+    rstream.on('readable',()=>{
+      let chunk;
+      while((chunk = rstream.read()) !== null){
+        res.setHeader('Content-Type','application/octet-stream');
+        res.setHeader('Content-Length', chunk.length);
+        res.setHeader('Content-Disposition', 'attachment; filename=wl.jpg');
+        res.end(chunk);
+      }
+    })
   } else {
     res.end('{"success":0}');
   }
+
 });
 server.on("close", () => {
   console.log("server is closed");
