@@ -34,6 +34,7 @@
                     form.append('file'+index,file);
                 })
             }
+            form.append('name','xwt')
             xhr.send(form)
         });
         file.addEventListener('change',function(e){
