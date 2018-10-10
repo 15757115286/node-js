@@ -22,6 +22,7 @@ const UPLOAD_OPTIONS = {
   useRandomFileName: false
 };
 
+// 自动上传文件的后缀为之前FormData中第三个参数值的后缀
 function upload(req, options = {}) {
   return new Promise((resolve, reject) => {
     let form = new multiparty.Form();
@@ -38,7 +39,7 @@ function upload(req, options = {}) {
         part.on("readable", () => {
           let chunk;
           while ((chunk = part.read()) !== null) {
-            result[part.name] = chunk.toString();
+            _push(result,part.name,chunk.toString());
           }
         });
       }
@@ -47,11 +48,11 @@ function upload(req, options = {}) {
         let localFileName = useRandomFileName
           ? _getRandomName("upload_") + _getFileSuffix(filename)
           : filename;
-        result[part.name] = {
+        _push(result,part.name,{
           filename,
           file: part,
           localFileName
-        };
+        })
         if (autoSave && imagePath)
           part.pipe(fs.createWriteStream(imagePath + "/" + localFileName));
       }
@@ -80,6 +81,12 @@ function _getFileSuffix(fileName) {
     match && (suffix = match[0]);
   }
   return suffix;
+}
+
+function _push(result,key,value){
+  let res = result[key];
+  res ? res.push(value) : result[key] = [value];
+  
 }
 exports.upload = upload;
 exports.getData = getData;

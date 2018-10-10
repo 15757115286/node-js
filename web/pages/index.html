@@ -1,46 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src="../utils/ajax.js"></script>
 </head>
+
 <body>
     <div>
         <label>文件上传</label>
         <input id="file" type="file" multiple accept="image/*">
         <button id="upload">上传</button>
         <a href="http://127.0.0.1:3000/images/wl" download="wl">下载</a>
+        <button id="ajax">ajax测试</button>
     </div>
     <script>
         var upload = document.querySelector('#upload');
         var file = document.querySelector("#file");
-        upload.addEventListener('click',function(e){
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST','http://127.0.0.1:3000/upload');
-            xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
-            xhr.onreadystatechange = function(){
-                if(xhr.status == 200 && xhr.readyState == XMLHttpRequest.DONE){
-                    console.log('上传完成！');
-                    console.log(xhr.responseText);
+        upload.addEventListener('click', function (e) {
+            ajax({
+                //url: 'http://127.0.0.1:3000/upload',
+                url:'http://127.0.0.1:3000/utils/ajax.js',
+                method: 'post',
+                data: {
+                    file: file.files,
+                    xwt: [1, 2, 3],
+                    info: {
+                        name: 'xwt',
+                        age: 18
+                    }
+                },
+                dataFormat: 'formData',
+                success: function (info) {
+                    console.log(info)
+                },
+                error: function (err) {
+                    console.log(err);
+                },
+                progress:function(e){
+                    console.log(e)
                 }
-            }
-            xhr.onerror = function(e){
-                console.log(e);
-            }
-            var form = new FormData();
-            if(file.files){
-                Array.from(file.files).forEach((file,index)=>{
-                    form.append('file'+index,file);
-                })
-            }
-            form.append('name','xwt')
-            xhr.send(form)
+            })
         });
-        file.addEventListener('change',function(e){
+        file.addEventListener('change', function (e) {
             console.log(e);
+        })
+        document.querySelector('#ajax').addEventListener('click', function (e) {
+            var xhr = ajax({
+                url: "http://36.22.185.242:8004/service/commserver/AuthService/loginIn",
+                method: 'post',
+                data: {
+                    accountid: 'sensoradmin',
+                    password: '1111'
+                },
+                success: function (success) {
+                    console.log(success)
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
         })
     </script>
 </body>
+
 </html>

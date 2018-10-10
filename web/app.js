@@ -12,6 +12,7 @@ const port = 3000;
 
 const server = http.createServer();
 const pagePath = path.resolve(__dirname, "pages");
+const utilsPath = path.resolve(__dirname,"utils");
 server.on("request", async (req, res) => {
   res.statusCode = 200;
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,6 +21,19 @@ server.on("request", async (req, res) => {
   res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
   let urlObj = url.parse(req.url, true);
   if (req.method.toLowerCase() === "options") return res.end();
+  if(urlObj.pathname === '/utils/ajax.js') {
+    let stream = fs.createReadStream(utilsPath + '/ajax.js');
+    let buf = Buffer.alloc(0);
+    stream.on('data',d=>{
+      buf = Buffer.concat([buf,d],buf.length + d.length);
+    })
+    stream.on('end',()=>{
+      res.setHeader('Content-Length',buf.length)
+      res.end(buf);
+    })
+    return;
+  };
+  if(urlObj.pathname === '/ajax/test') return fs.createReadStream(imagePath + "/wl.jpg").pipe(res);
   if (urlObj.pathname === "/index") {
     return res.end(await getFile(pagePath + "/index.html"));
   } else if (urlObj.pathname === "/upload") {
