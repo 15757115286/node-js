@@ -3,8 +3,8 @@ const fs = require("fs");
 // 2.第二次文件的追加必须在第一次文件流关闭以后，不然会丢失数据(可以使用appendFile，或者通过fs.open获取文件句柄，然后
 //   在用createWriteStream中的options.fd options.flag = 'a'来打开文件添加数据)
 // 3.对图片的二进制使用toString()然后在对字符串使用Buffer.from(data)转为来的二进制文件不等于之前的二进制内容
-// 4.如果readable同时添加了data和readable时间，那么第一时间会触发data事件，会把可读的buffer清空，然后在触发readalbe
-// 事件，所以readable中使用readable.read()读取的内容一直为空
+// 4.如果readable同时添加了data和readable时间，那么第一时间会触发data事件，会把可读的buffer清空，所以不会再触发readable
+// 事件。因为在到达数据流的结尾的时候会先于end事件触发一次readable，此时的可以读取的数据为null。所以最终是会触发一次readable(空数据)
 
 function testReadable() {
   let readable = fs.createReadStream("wl.jpg");
@@ -79,24 +79,37 @@ function testEmitDataEventWhenRead(){
 // testEmitDataEventWhenRead();
 // 文件读取时候触发readable的次数取决于文件的大小和highWaterMark的值。如果highWaterMark的值大，那么读取的文件速度相应来说也会快（因为减少对磁盘系统的调用）
 // 但是产生的问题是可能会造成内存的剩余当文件大小小于highWaterMark的时候。一开始申请的Buffer内存大小为highWaterMark。当读取流到末尾的时候，会触发end事件
+// 如果文件大小大于highWaterMark，那么每次触发的data或者readable.read()读取的buffer的length和highWaterMark相同
 
 // 如果readable同时添加了data和readable时间，那么第一时间会触发data事件，会把可读的buffer清空，然后在触发readalbe
 // 事件，所以readable中使用readable.read()读取的内容一直为空
+
+// data事件和readable事件触发的次数是“相同”的。唯一的区别就是读到流结尾的时候发现
+// 没有数据了，会触发一次readable事件，然后在去读，发现是流已经结束了，在触发一次
+// readable，此时使用readable.read()为null，在会触发end事件
 function testEmitReadableEventWhenRead(){
     let readable = fs.createReadStream('wl.jpg',{highWaterMark:1024});
     let count = 0;
     let chunk = Buffer.alloc(0);
     readable.on('readable',()=>{
-        console.log('readable',++count);// 这里假设图片为15.4k，那么会输出readable 16 打印16次
+        console.log('readable',++count);// 这里假设图片为14.9k，那么会输出readable 16 打印16次
         let data = readable.read();
         if(data){
             console.log(data.length);
             chunk = Buffer.concat([chunk,data],chunk.length + data.length);
         }
     })
+    /* readable.on('data',data=>{
+        console.log('data',data.length,++count);// 这里假设图片为14.9k，那么会输出readable 15 打印15次
+        chunk = Buffer.concat([chunk,data],chunk.length + data.length);
+    }) */
     readable.on('end',()=>{
+        console.log('read end');
         let writalbe = fs.createWriteStream('wlOfcopy.jpg');
         writalbe.write(chunk,err=>console.log(err));
+    })
+    readable.on('error',err=>{
+        console.log(err.message);
     })
 }
 testEmitReadableEventWhenRead();

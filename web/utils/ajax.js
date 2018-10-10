@@ -89,7 +89,7 @@ function _initEvents(xhr, options) {
   var success = typeof options.success === "function" ? options.success : noop;
   var error = typeof options.error === "function" ? options.error : noop;
   // xhr的progress需要在lengthComputable为true的时候才能确定total的长度，这个需要在响应头里面设置Content-Length:100这样的内容，长度为字节长度
-  var progerss =
+  var progress =
     typeof options.progress === "function" ? options.progress : noop;
   xhr.onreadystatechange = function() {
     var successCode = [200, 304];
@@ -101,7 +101,7 @@ function _initEvents(xhr, options) {
     }
   };
   xhr.onerror = xhr.ontimeout = xhr.onabort = error;
-  xhr.onprogress = progerss;
+  xhr.onprogress = progress;
 }
 
 function _formatToJson(data) {
@@ -120,19 +120,19 @@ function _formatToForm(data) {
   }
   return result.join("&");
 }
-// 如果是类数组对象（有length）或者数组，直接使用append保存每一项
+// 如果是类数组对象（有length）或者数组，直接使用append保存每一项，如果length为0则忽略此项
 // null,undefined和无法stringify的对象忽略
 function _formatToFormData(data) {
   var formData = new FormData();
   for (var key in data) {
     var res = data[key];
+    if (res == null) continue;
     if (typeof res === "object" && res.length != undefined) {
       res = _from(res);
       res.forEach(function(arr) {
         formData.append(key, arr);
       });
     } else {
-      if (res == null) continue;
       try {
         // 对对象类型进行stringify，无法stringify的对象则忽略
         if (typeof res === "object") {
