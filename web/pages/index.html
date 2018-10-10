@@ -22,8 +22,8 @@
         var file = document.querySelector("#file");
         upload.addEventListener('click', function (e) {
             ajax({
-                //url: 'http://127.0.0.1:3000/upload',
-                url:'http://127.0.0.1:3000/utils/ajax.js',
+                url: 'http://127.0.0.1:3000/upload',
+                //url:'http://127.0.0.1:3000/utils/ajax.js',
                 method: 'post',
                 data: {
                     file: file.files,

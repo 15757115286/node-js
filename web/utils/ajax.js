@@ -5,11 +5,11 @@ var OPTIONS = {
   success: null,
   error: null,
   progress: null,
-  upload:null,
+  upload: null,
   headers: {},
   data: null,
   timeout: 0,
-  dataFormat:'json'// json/form/fromData
+  dataFormat: "json" // json/form/fromData
 };
 
 var toString = Object.prototype.toString;
@@ -18,10 +18,10 @@ function _isObject(obj) {
   return toString.call(obj) === "[object Object]";
 }
 
-function _from(arraylike){
-    var slice = Array.prototype.slice;
-    var args = slice.call(arguments,1);
-    return slice.apply(arraylike,args);
+function _from(arraylike) {
+  var slice = Array.prototype.slice;
+  var args = slice.call(arguments, 1);
+  return slice.apply(arraylike, args);
 }
 
 function ajax(options) {
@@ -49,18 +49,17 @@ function ajax(options) {
     data = null;
   } else {
     let dataFormat = options.dataFormat.toLowerCase();
-    if(!_isObject(data)) {
-        data = null;
-    }else{
-        if(dataFormat === 'json'){
-            data = _formatToJson(data);
-        }else if(dataFormat === 'form'){
-            data = _formatToForm(data);
-        }else if(dataFormat === 'formdata'){
-            data = _formatToFormData(data);
-        }
+    if (!_isObject(data)) {
+      data = null;
+    } else {
+      if (dataFormat === "json") {
+        data = _formatToJson(data);
+      } else if (dataFormat === "form") {
+        data = _formatToForm(data);
+      } else if (dataFormat === "formdata") {
+        data = _formatToFormData(data);
+      }
     }
-    
   }
   // 所有的ajax都为异步，这里默认不能设置为同步
   xhr.open(method, url, true);
@@ -78,9 +77,11 @@ function ajax(options) {
   _initEvents(xhr, options);
   // 发送请求
   xhr.send(data);
+  // 可以根据返回的xhr调用xhr.abort()来终止本次请求
   return xhr;
 }
 
+// 空操作函数
 var noop = function noop() {};
 
 function _initEvents(xhr, options) {
@@ -103,38 +104,45 @@ function _initEvents(xhr, options) {
   xhr.onprogress = progerss;
 }
 
-function _formatToJson(data){
-    return JSON.stringify(data);
+function _formatToJson(data) {
+  return JSON.stringify(data);
 }
 
-function _formatToForm(data){
-    var result = [];
-    for(var key in data){
-        let res = data[key];
-        if(!res) continue;
-        if(typeof res === 'number' || typeof res === 'string'){
-            result.push(key + '=' + res);
-        }
+// 转成表单类型，类似name=xwt&age=1，data对象里面只能有字符串和数值，其他类型忽略
+function _formatToForm(data) {
+  var result = [];
+  for (var key in data) {
+    let res = data[key];
+    if (!res) continue;
+    if (typeof res === "number" || typeof res === "string") {
+      result.push(key + "=" + res);
     }
-    return result.join('&');
+  }
+  return result.join("&");
 }
-function _formatToFormData(data){
-    var formData = new FormData();
-    for(var key in data){
-        var res = data[key];
-        if(typeof res === 'object' && res.length != undefined){
-            res = _from(res);
-            res.forEach(function(arr){
-                formData.append(key,arr);
-            })
-        }else{
-            try{
-                res = JSON.stringify(res);
-            }catch(e){
-                continue;
-            }
-            formData.append(key,res);
+// 如果是类数组对象（有length）或者数组，直接使用append保存每一项
+// null,undefined和无法stringify的对象忽略
+function _formatToFormData(data) {
+  var formData = new FormData();
+  for (var key in data) {
+    var res = data[key];
+    if (typeof res === "object" && res.length != undefined) {
+      res = _from(res);
+      res.forEach(function(arr) {
+        formData.append(key, arr);
+      });
+    } else {
+      if (res == null) continue;
+      try {
+        // 对对象类型进行stringify，无法stringify的对象则忽略
+        if (typeof res === "object") {
+          res = JSON.stringify(res);
         }
+      } catch (e) {
+        continue;
+      }
+      formData.append(key, res);
     }
-    return formData;
+  }
+  return formData;
 }
