@@ -18,7 +18,7 @@ console.log(buf.readUInt32BE().toString(10));
 console.log(buf.readInt16LE()); */
 /* let buf = Buffer.from('你好，123xwt','utf-8') //Buffer(15) [228, 189, 160, 229, 165, 189, 239, 188, …]
 console.log(buf) */
-let buf = Buffer.from([-1,256,-3.11,[],'2.55.'])
+/* let buf = Buffer.from([-1,256,-3.11,[],'2.55.'])
 console.log(buf)
 // 1(符号位，负数)111 1111 0000 0001 0000 0001 0000 0001
 // 相当于 -0111 1111 0000 0001 0000 0001 0000 0001
@@ -27,4 +27,26 @@ console.log(buf)
 // 负数的原码就是除去最高位后面的内容，反码就是原码取反，0变成1,1变成0。补码就是反码的最低位加1。
 // 由于在计算机中一切数值都是用补码来表示的，所以最后补码的值就是最终的值，前面在加上符号位即可。
 const buf1 = Buffer.from([127,1,1,1]);
-console.log(buf1.readInt32BE(0))
+console.log(buf1.readInt32BE(0)) */
+/* let buffer = Buffer.alloc(10,'你好世界')
+let buffer1 = Buffer.from('你好世界')
+console.log(buffer) */
+/* let buf = Buffer.allocUnsafe(5);
+
+console.log(buf.fill('a'));
+// Prints: <Buffer 61 61 61 61 61>
+console.log(buf.fill('abcdef','hex'));
+buf = Buffer.alloc(5)
+console.log(buf.fill('0a','hex')) */
+// Prints: <Buffer aa aa aa aa aa>
+/* const buffer = Buffer.from([-1,5])//[255,5];
+console.log(buffer)
+console.log(buffer.readUInt8(0)) */
+/* const buf = Buffer.from([0, 0, 0, 0, 0, 0, 0, 3]);
+let value = buf.readDoubleBE(0);
+console.log(value);
+// Prints: 8.20788039913184e-304
+console.log(buf.readDoubleLE(0)); */
+let buf = Buffer.from([129,5,5,79]);
+console.log(buf.readInt32BE(0));// -2130377393
+console.log(buf.readInt32LE(0));// 1325729153
