@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>test</title>
+</head>
+<body>
+    <script>
+        // 当一个函数被声明的时候
+        function a(){
+            let name = 'name in a';
+            let age = 18;
+            function b(){
+                let name = 'name in b'
+                console.log(name,age,job);// name in b ,18,js
+            }
+            return b;
+        }
+        let b = a();
+        let job = 'js';
+        let age = 13;
+        function c(){
+            let job = 'java';
+            let name = 'name in c';
+            b();
+            console.dir(b)
+        }
+        //c();
+        let name = 'xwt';
+        function fn(){
+            console.log(name);
+            //let name = 'cm';
+            var name = 'cm';
+            console.log(name); 
+        }
+        fn();
+    </script>
+</body>
+</html>

@@ -58,7 +58,9 @@ class Server extends EventEmitter{
 }
 
 let server = new Server(({req,res}) => {
-    res.end('hello world')
+    fs.readFile(path.resolve(__dirname,'pages/event.html'),(err,data)=>{
+        res.end(data);
+    })
 }).listen(3000,'127.0.0.1');
 server.on('error',()=>{})
 
