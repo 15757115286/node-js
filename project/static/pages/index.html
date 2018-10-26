@@ -5,9 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>test</title>
-    <script src="../js/index.js"></script>
+    <script src="../js/injector.js"></script>
+    
 </head>
 <body>
     hello world
+    <script>
+        injector
+            .register('dep1',{name:'xwt'})
+            .register('dep2',[1,2,3])
+            .register('dep3',function log(log){
+                console.log(log);
+            });
+        var temp = injector.resolve(function(dep1,dep2,other,dep3){
+            var name = dep1.name;
+            var pos = dep2;
+            var log = name + '|' + pos + '|' + other;
+            dep3(log);
+        });
+        temp('hello');
+    </script>
 </body>
 </html>
