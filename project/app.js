@@ -5,6 +5,23 @@ const fs = require('fs');
 const server = http.createServer((req,res)=>{
    try{
         let finalPath = path.resolve(__dirname,'static',req.url.substring(1));
+        if(/^\/ajax/.test(req.url)){
+            if(req.url == '/ajax/wl'){
+                let rs = fs.createReadStream(path.resolve(__dirname,'static/img/copy.png'));
+                rs.on('error',function(e){
+                    res.statusCode = 500;
+                    res.statusMessage = 'server interval error occur';
+                    res.end('the interval error occur !\n'+e.message);
+                })
+                res.on('pipe',function(src){
+                    console.log(src)
+                })
+                rs.pipe(res);
+            }else{
+                res.end('路径错误！');
+            }
+            return;
+        }
         let readstream = fs.createReadStream(finalPath);
         readstream.on('error',err=>{
             if(err.code == 'ENOENT'){

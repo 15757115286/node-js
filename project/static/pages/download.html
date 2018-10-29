@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>download</title>
+    <script src="../js/ajax.js"></script>
+</head>
+
+<body>
+    <button id="download">下载</button>
+    <script>
+        var btn = document.querySelector('#download');
+        btn.addEventListener('click', function (e) {
+            var msg = {
+                name: '栗山未来',
+                age: 17,
+                tag: '不愉快'
+            }
+            var blob = new Blob([JSON.stringify(msg)], { type: 'application/json' });
+            var fileName = 'test.json';
+            ajax({
+                type:'blob',
+                url:'http://localhost:3000/ajax/wl',
+                success:function(data){
+                    saveBlob(data,'wl.png');
+                },
+                error:function(error){
+                    console.log(error);
+                }
+            })
+        });
+        function saveBlob(blob,fileName){
+            if (navigator.msSaveBlob) {
+                navigator.msSaveBlob(blob, fileName);
+            } else {
+                var a = document.createElement('a');
+                a.download = fileName;
+                a.href = URL.createObjectURL(blob);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }           
+        }
+    </script>
+</body>
+
+</html>
