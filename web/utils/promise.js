@@ -37,6 +37,7 @@ function Promise(fn){
     }
 }
 
+// the then function of the Promise prototype
 Promise.prototype.then = function(success,fail){
     var self = this;
     if(this.status === 'resolved'){
