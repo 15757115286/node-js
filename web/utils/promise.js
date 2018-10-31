@@ -16,7 +16,7 @@ function Promise(fn){
             self.onfulfilled(value);
         }
     }
-    
+    // the reject function provide for the promise
     function reject(error){
         if(self.status !== 'pending') return;
         self.status = 'rejected';
