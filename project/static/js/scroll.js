@@ -35,9 +35,13 @@ function initScrollBar(containerId, contentId, options) {
 
   initVerticalScrollBar(box, content, finalOptions);
   initHorizontalScrollBar(box, content, finalOptions);
-  window.onresize = function (e) {
+  function resize(){
     initVerticalScrollBar(box, content, finalOptions);
     initHorizontalScrollBar(box, content, finalOptions);
+  }
+  window.addEventListener('resize',resize);
+  return function unbind(){
+    window.removeEventListener('resize',resize);
   }
 }
 
