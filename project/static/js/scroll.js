@@ -16,25 +16,28 @@ var initialOptions = {
   containerColor: "blue",
   scrollBarColor: "black"
 };
+var prefix = 'scroll';
+
 function initScrollBar(containerId, contentId, options) {
   var box = document.querySelector("#" + containerId),
     content = document.querySelector("#" + contentId);
   if (!box || !content) return;
+  // 禁止box拖拽
+  box.addEventListener('dragstart', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  })
   // 合并默认样式
   mergeInitialStyle(box, content);
-  console.log(box.scrollHeight);
-  var scrollHeight = box.scrollHeight,
-    scrollWidth = box.scrollWidth;
-  var boxHeight = box.offsetHeight,
-    boxWidth = box.offsetWidth;
+
   // 文档高度大于容器高度，产生垂直滚动条
   var finalOptions = easyMixin({}, initialOptions, options);
-  if (scrollHeight > boxHeight) {
-    initVerticalScrollBar(box, content, scrollHeight, boxHeight, finalOptions);
-  }
-  // 文档宽度大于实际宽度，产生水平滚动条
-  if (scrollWidth > boxWidth) {
-    initHorizontalScrollBar(box, content, scrollWidth, boxWidth, finalOptions);
+
+  initVerticalScrollBar(box, content, finalOptions);
+  initHorizontalScrollBar(box, content, finalOptions);
+  window.onresize = function (e) {
+    initVerticalScrollBar(box, content, finalOptions);
+    initHorizontalScrollBar(box, content, finalOptions);
   }
 }
 
@@ -73,39 +76,70 @@ function mergeStyle(dom, styleObj) {
 }
 
 // 初始化垂直滚动条
-function initVerticalScrollBar(box, content, scrollHeight, boxHeight, options) {
+function initVerticalScrollBar(box, content, options) {
+  // 如果有的话，移除上一次的滚轮事件
+  if (options.mousewheelFn) {
+    box.removeEventListener('mousewheel', options.mousewheelFn);
+  }
+  var scrollHeight = box.scrollHeight,
+    boxHeight = box.offsetHeight;
+  var containerClass = prefix + '-container-y',
+    barClass = prefix + '-bar-y';
+  var oldContainer = box.querySelector('.' + containerClass),
+    oldScrollBar = box.querySelector('.' + barClass);
+  if (oldContainer) {
+    box.removeChild(oldContainer);
+    oldContainer = null;
+  }
+  // 此时不需要竖直滚动条
+  if (scrollHeight <= boxHeight) return;
   var barHeight = ((boxHeight / scrollHeight) * boxHeight) >> 0;
   var isClick = false;
   var startY = 0,
     nowY = 0;
+
   var verticalContainer = document.createElement("div"),
     verticalScrollBar = document.createElement("div");
-  verticalScrollBar.addEventListener("mousedown", function(e) {
+  verticalScrollBar.addEventListener("mousedown", function (e) {
     isClick = true;
     startY = e.screenY;
   });
+  box.addEventListener('mousewheel', options.mousewheelFn = function (e) {
+    var wheelDeltaY = e.wheelDeltaY;
+    if (!wheelDeltaY) return;
+    var moveY = wheelDeltaY / 120 * (Math.min(boxHeight * 0.1, 100));
+    toMove(-moveY);
+  });
   // 阻止默认行为
-  verticalScrollBar.addEventListener("click", function(e) {
+  verticalScrollBar.addEventListener("click", function (e) {
     e.stopPropagation();
   });
-  window.addEventListener("mouseup", function(e) {
+  window.addEventListener("mouseup", function (e) {
     isClick = false;
   });
-  var move = throttle(function(e) {
+  var move = throttle(function (e) {
     if (isClick == false) return;
     var endY = e.screenY,
       moveY = endY - startY;
-    var lastY = boxHeight - barHeight;
     startY = endY;
+    toMove(moveY);
+  }, 20);
+
+  function toMove(moveY) {
+    var lastY = boxHeight - barHeight;
     nowY += moveY;
     if (nowY <= 0) nowY = 0;
     if (nowY >= lastY) nowY = lastY;
     verticalScrollBar.style.top = nowY + "px";
     moveYFn(content, scrollHeight, boxHeight, nowY);
-  }, 20);
+  }
 
-  verticalContainer.addEventListener("click", function(e) {
-    var moveDistance = Math.max(e.offsetY - barHeight,0);
+  verticalContainer.addEventListener("click", function (e) {
+    startY = e.screenY;
+    var offsetY = e.offsetY;
+    // 修正5%偏差距离，防止点不到最下面的距离
+    if (boxHeight - offsetY <= boxHeight * 0.05) offsetY = boxHeight;
+    var moveDistance = nowY = Math.max(offsetY - barHeight, 0);
     moveYFn(content, scrollHeight, boxHeight, moveDistance);
     verticalScrollBar.style.top = moveDistance + "px";
   });
@@ -113,6 +147,8 @@ function initVerticalScrollBar(box, content, scrollHeight, boxHeight, options) {
   window.addEventListener("mousemove", move);
   var containerStyle = verticalContainer.style,
     scrollBarStyle = verticalScrollBar.style;
+  verticalContainer.classList.add(containerClass);
+  verticalScrollBar.classList.add(barClass);
   verticalContainer.appendChild(verticalScrollBar);
   containerStyle.height = boxHeight + "px";
   containerStyle.backgroundColor = options.containerColor;
@@ -122,6 +158,10 @@ function initVerticalScrollBar(box, content, scrollHeight, boxHeight, options) {
   scrollBarStyle.height = barHeight + "px";
   mergeStyle(verticalContainer, initialVerticalContainerStyle);
   mergeStyle(verticalScrollBar, initialVerticalScrollBarStyle);
+  if (oldScrollBar) {
+    var moveY = Math.min(parseInt(oldScrollBar.style.top), boxHeight - barHeight);
+    toMove(moveY);
+  }
   box.appendChild(verticalContainer);
 }
 
@@ -138,19 +178,22 @@ function setTranslate(dom, x, y) {
   var re = /translate\((-?\d+\.?\d*)px,\s*(-?\d+\.?\d*)px\)/;
   var match = translate.match(re);
   if (!match) return;
-  var curX = +match[1],
-    curY = +match[2];
   style.transform = "translate(" + -x + "px," + -y + "px)";
 }
 
 // 初始化水平滚动条
-function initHorizontalScrollBar(dom, content, scrollWidth, boxWidth) {}
+function initHorizontalScrollBar(dom, content, boxWidth) {
+  var scrollWidth = box.scrollWidth,
+    boxWidth = box.offsetWidth;
+  // 此时不需要水平滚动条
+  if (scrollWidth < boxWidth) return;
+}
 
 // function throttle
 function throttle(fn, interval) {
   var lastTime = 0;
   interval = interval || 1000;
-  return function() {
+  return function () {
     var _now = Date.now();
     if (_now - lastTime > interval) {
       fn.apply(this, arguments);
