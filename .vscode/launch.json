@@ -11,7 +11,7 @@
             "name": "启动程序",
             //"program": "${workspaceFolder}\\web\\app.js" //启动网络应用
             //"program": "${workspaceFolder}\\test.js" // 启动测试应用
-            "program": "${workspaceFolder}\\project\\app.js" // 启动buffer模块
+            "program": "${workspaceFolder}\\web\\utils\\promise.js" // 启动buffer模块
         }
     ]
 }

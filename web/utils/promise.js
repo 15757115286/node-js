@@ -88,6 +88,7 @@ Promise.prototype.then = function(success,fail){
                             resolve(result);
                         }
                     }else{
+                        // 这一步操作是如果在当前then中没有传入success回调，则把当前Promise的结果值传递下去
                         resolve(value);
                     }
                 }catch(error){
@@ -96,8 +97,8 @@ Promise.prototype.then = function(success,fail){
             }
             self.onrejected = function onrejected(error){
                 try{
-                    self.timer && clearTimeout(self.timer);
-                    self.time = null;
+                    /* self.timer && clearTimeout(self.timer);
+                    self.time = null; */
                     if(typeof fail === 'function'){
                         var result = fail(error);
                         if(result instanceof Promise){
@@ -106,6 +107,7 @@ Promise.prototype.then = function(success,fail){
                             resolve(result);
                         }
                     }else{
+                        // 这一步操作是如果Promise捕获错误但是并没有对应的fail函数，则把错误一直传递下去直到遇到fail函数或者catch
                         reject(error)
                     }
                 }catch(error){
@@ -215,12 +217,16 @@ var promise = new Promise((resolve,reject)=>{
 }).catch(e=>{
     console.log('error' + e)
 }) */
-Promise.all([new Promise(res=>{
+/* Promise.all([new Promise(res=>{
     setTimeout(()=>{
         res('cm')
-    },4000)
-}),Promise.reject('xwt'),3]).then(res=>{
-    console.log(res);
-}).catch(e=>{
+    },1000)
+}),Promise.resolve('xwt'),3]).catch(e=>{
     console.log(e);
-})
+}).then(res=>{
+    console.log(res)
+}) */
+new Promise((res,rej)=>{
+    rej('cm');
+    //setTimeout(rej,0,'xwt')
+}).catch(null)
