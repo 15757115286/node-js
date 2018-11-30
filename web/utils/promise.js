@@ -227,6 +227,8 @@ var promise = new Promise((resolve,reject)=>{
     console.log(res)
 }) */
 new Promise((res,rej)=>{
-    rej('cm');
-    //setTimeout(rej,0,'xwt')
-}).catch(null)
+    //rej('cm');
+    setTimeout(rej,0,'xwt')
+}).catch(null).then(res=>{}).catch(e=>{
+    console.log(e)
+})
